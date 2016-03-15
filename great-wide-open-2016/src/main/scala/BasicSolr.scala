@@ -5,7 +5,7 @@ import org.apache.spark.sql.{DataFrame, Row, SQLContext}
 object BasicSolr extends Serializable{
 
   def langCardinality(sqlContext: SQLContext): DataFrame = {
-    val tweets: DataFrame = setup(sqlContext)
+    val tweets: DataFrame = loadTweets(sqlContext)
     println(tweets.collect())
     tweets.cache()
     tweets.registerTempTable("tweets")
