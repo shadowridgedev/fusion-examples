@@ -1,5 +1,8 @@
+import org.apache.spark.mllib.clustering._
 import org.apache.spark.mllib.feature.Word2VecModel
+import org.apache.spark.mllib.feature.Word2Vec
 import org.apache.spark.mllib.linalg._
+import org.apache.spark.rdd.RDD
 
 object Word2VecUtils {
 
@@ -28,6 +31,60 @@ object Word2VecUtils {
       val docVector = doc.filter(vocab.contains).map(model.transform).reduce(_ + _)
       model.findSynonyms(docVector, num)
     }
+
+    def safelyFindSynonyms(word: String, num: Int): Array[(String, Double)] = {
+      if (vocab.contains(word)) {
+        model.findSynonyms(word, num)
+      } else {
+        Array.empty
+      }
+    }
   }
 
+  def train(corpus: RDD[List[String]]): Word2VecModel = {
+    new Word2Vec().fit(corpus)
+  }
+
+}
+
+case class Corpus[T](data: RDD[(Long, T, Vector)], dict: Map[String, Int]) {
+  val reverseDict: Array[String] = dict.toList.sortBy(_._2).map(_._1).toArray
+}
+
+object Corpus {
+  def vectorize[T](rawInput: RDD[T],
+                   id: (T => Long),
+                   tokenize: (T => Iterable[String])): Corpus[T] = {
+    val tokenized = rawInput.map(t => (id(t), tokenize(t)))
+    // count number of unique documents containing each token
+    val tokenCounts = tokenized.flatMap(_._2.toSet.map(tok => (tok, 1))).reduceByKey(_ + _)
+    val minSupport = 5
+    val numDocs = tokenized.count()
+    val maxSupport = 0.5 * numDocs
+    val dictionary =
+      tokenCounts.filter(p => p._2 >= minSupport && p._2 < maxSupport).keys.collect().sorted.zipWithIndex.toMap
+    val dictionaryVectorizer = (t: T) => {
+      val tokens = tokenize(t)
+      val tokenIndexCounts = tokens.flatMap(dictionary.get).groupBy(identity).mapValues(_.sum.toDouble).toList
+      Vectors.sparse(dictionary.size, tokenIndexCounts)
+    }
+    Corpus(rawInput.map(x => (id(x), x, dictionaryVectorizer(x))), dictionary)
+  }
+}
+
+object ClusterUtils {
+  val ALPHA = 0.05
+
+  def vectorize(corpus: RDD[(Long, List[String])]): RDD[Vector] = {
+    val id = (p: (Long, List[String])) => p._1
+    val tokens = (p: (Long, List[String])) => p._2
+    val corpus = Corpus.vectorize[(Long, List[String])](corpus, id, tokens)
+    corpus.data.map(_._3)
+  }
+
+  def generateClusters(corpus: RDD[(Long, List[String])], k: Int = 20, maxIters: Int = 50): KMeansModel = {
+    val data = vectorize(corpus)
+    val kmeans = KMeans.train(data, k, maxIters)
+    kmeans
+  }
 }
