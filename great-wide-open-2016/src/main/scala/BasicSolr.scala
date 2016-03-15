@@ -14,10 +14,10 @@ object BasicSolr extends Serializable{
   }
 
 
-  def setup(sqlContext: SQLContext,
-            zkHost: String = "localhost:9983",
-            collection: String = "twitter",
-            query: String = "*:*"): DataFrame = {
+  def loadTweets(sqlContext: SQLContext,
+                 zkHost: String = "localhost:9983",
+                 collection: String = "twitter",
+                 query: String = "*:*"): DataFrame = {
     val opts = Map(
       "zkhost" -> zkHost,
       "collection" -> collection,
