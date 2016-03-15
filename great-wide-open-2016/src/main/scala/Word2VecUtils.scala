@@ -1,7 +1,7 @@
 import org.apache.spark.mllib.clustering._
 import org.apache.spark.mllib.feature.Word2VecModel
 import org.apache.spark.mllib.feature.Word2Vec
-import org.apache.spark.mllib.linalg._
+import org.apache.spark.mllib.linalg.{Vectors, Vector}
 import org.apache.spark.rdd.RDD
 
 object Word2VecUtils {
@@ -51,13 +51,13 @@ case class Corpus[T](data: RDD[(Long, T, Vector)], dict: Map[String, Int]) {
   val reverseDict: Array[String] = dict.toList.sortBy(_._2).map(_._1).toArray
 }
 
-object Corpus {
+object CorpusUtils {
   def vectorize[T](rawInput: RDD[T],
                    id: (T => Long),
                    tokenize: (T => Iterable[String])): Corpus[T] = {
     val tokenized = rawInput.map(t => (id(t), tokenize(t)))
     // count number of unique documents containing each token
-    val tokenCounts = tokenized.flatMap(_._2.toSet.map(tok => (tok, 1))).reduceByKey(_ + _)
+    val tokenCounts = tokenized.flatMap(_._2.toSet.map((tok: String) => (tok, 1))).reduceByKey(_ + _)
     val minSupport = 5
     val numDocs = tokenized.count()
     val maxSupport = 0.5 * numDocs
@@ -68,7 +68,8 @@ object Corpus {
       val tokenIndexCounts = tokens.flatMap(dictionary.get).groupBy(identity).mapValues(_.sum.toDouble).toList
       Vectors.sparse(dictionary.size, tokenIndexCounts)
     }
-    Corpus(rawInput.map(x => (id(x), x, dictionaryVectorizer(x))), dictionary)
+    val corpus: Corpus[T] = Corpus(rawInput.map(x => (id(x), x, dictionaryVectorizer(x))), dictionary)
+    corpus
   }
 }
 
@@ -78,8 +79,8 @@ object ClusterUtils {
   def vectorize(corpus: RDD[(Long, List[String])]): RDD[Vector] = {
     val id = (p: (Long, List[String])) => p._1
     val tokens = (p: (Long, List[String])) => p._2
-    val corpus = Corpus.vectorize[(Long, List[String])](corpus, id, tokens)
-    corpus.data.map(_._3)
+    val vectorizedCorpus = CorpusUtils.vectorize[(Long, List[String])](corpus, id, tokens)
+    vectorizedCorpus.data.map(_._3)
   }
 
   def generateClusters(corpus: RDD[(Long, List[String])], k: Int = 20, maxIters: Int = 50): KMeansModel = {
