@@ -13,11 +13,14 @@ object BasicSolr extends Serializable{
   }
 
 
-  def setup(sqlContext: SQLContext): DataFrame = {
+  def setup(sqlContext: SQLContext,
+            zkHost: String = "localhost:9983",
+            collection: String = "twitter",
+            query: String = "*:*"): DataFrame = {
     val opts = Map(
-      "zkhost" -> "localhost:9983",
-      "collection" -> "twitter",
-      "query" -> "*:*")
+      "zkhost" -> zkHost,
+      "collection" -> collection,
+      "query" -> query)
 
     val tweets = sqlContext.read.format("solr").options(opts).load
     tweets
