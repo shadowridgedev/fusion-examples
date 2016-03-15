@@ -1,14 +1,26 @@
-All working examples from Grant Ingersoll's Fusion For Data Science Webinar on May 27th, 2015.
-
+All working examples from Grant Ingersoll's Data Engineering with Solr and Spark talk.
 
 Requirements
 ==============
 
-You will need:
-
-1. Fusion 1.4.0: http://lucidworks.com/fusion/download/
 1. Postman: https://www.getpostman.com/ (use the packaged app, not the Chrome extension)
 1. A Twitter account with developer API keys: https://dev.twitter.com/
+
+
+Requirements if using Fusion
+==============
+
+You will need:
+
+1. Fusion 2.2.0: http://lucidworks.com/fusion/download/ 
+
+
+Requirements if using Solr and Spark
+==============
+
+1. Solr 5.4.0
+1. Spark 1.5
+1. Spark-Solr library http://github.com/lucidworks/spark-solr
 
 
 Getting Started

@@ -5,6 +5,16 @@ import org.apache.spark.sql.{Row, DataFrame, SQLContext}
 //  :load /Users/grantingersoll/projects/lucid/fusion-examples/great-wide-open-2016/src/main/scala/com/lucidworks/gwo/BasicSolr.scala
 object BasicSolr extends Serializable{
 
+  def langCardinality(sqlContext: SQLContext): DataFrame = {
+    val tweets: DataFrame = setup(sqlContext)
+    println(tweets.collect())
+    tweets.cache()
+    tweets.registerTempTable("tweets")
+    tweets.groupBy("lang_s").count().show(50)
+    tweets
+  }
+
+
   def setup(sqlContext: SQLContext): DataFrame = {
     val opts = Map(
       "zkhost" -> "localhost:9983",
@@ -41,26 +51,4 @@ object BasicSolr extends Serializable{
       }
     }
 
-  def langCardinality(sqlContext: SQLContext): DataFrame = {
-    val tweets: DataFrame = setup(sqlContext)
-    println(tweets.collect())
-    tweets.cache()
-    tweets.registerTempTable("tweets")
-    tweets.groupBy("lang_s").count().show(50)
-    tweets
-  }
-
-  def example2(sqlContext: SQLContext): DataFrame = {
-    val opts = Map(
-      "zkhost" -> "localhost:9983",
-      "collection" -> "twitter",
-      "fields" -> "id,tweet_t,tagsText_ss",
-      "query" -> "*:*")
-
-    val tweets = sqlContext.read.format("solr").options(opts).load
-    println(tweets.collect())
-    tweets.cache()
-    tweets.registerTempTable("logs")
-    tweets
-  }
 }
