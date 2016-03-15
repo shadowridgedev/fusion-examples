@@ -1,6 +1,4 @@
-package com.lucidworks.gwo
-
-import org.apache.spark.sql.{Row, DataFrame, SQLContext}
+import org.apache.spark.sql.{DataFrame, Row, SQLContext}
 
 //  :load /Users/grantingersoll/projects/lucid/fusion-examples/great-wide-open-2016/src/main/scala/com/lucidworks/gwo/BasicSolr.scala
 object BasicSolr extends Serializable{
