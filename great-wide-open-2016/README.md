@@ -41,3 +41,10 @@ Aggregations
 The Aggregations folder ships with various examples of running aggregations on the raw Twitter data that was indexed.  See https://docs.lucidworks.com/display/fusion/Aggregations and https://docs.lucidworks.com/display/fusion/Aggregator+Functions for more details on what each of these do.
 
 To execute any one of the aggregations, first POST the definition of the aggregation to Fusion and then POST the run command to the Jobs API.  For instance, POST the "Lang Cardinality" defintion for determining the cardinality of the lang_s field and then run it by executing the "Run Lang Cardinality Aggregations" function.
+
+
+Spark Shell
+================
+
+1. In $FUSION_HOME: bin/spark-shell (Fusion 2.3+ only) or start spark-shell via the instructions on the spark-solr project
+1. See src/main/spark-shell/commands.md for details on running spark shell commands
