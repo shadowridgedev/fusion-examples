@@ -1,7 +1,7 @@
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{DataFrame, Row, SQLContext}
 
-//  :load /Users/grantingersoll/projects/lucid/fusion-examples/great-wide-open-2016/src/main/scala/com/lucidworks/gwo/BasicSolr.scala
+//  :load /path/to/fusion-examples/great-wide-open-2016/src/main/scala/com/lucidworks/gwo/BasicSolr.scala
 object BasicSolr extends Serializable{
 
   def langCardinality(sqlContext: SQLContext): DataFrame = {
