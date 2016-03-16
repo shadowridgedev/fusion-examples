@@ -3,6 +3,8 @@ import org.apache.spark.mllib.feature.Word2VecModel
 import org.apache.spark.mllib.linalg.{Vectors, Vector}
 import org.apache.spark.rdd.RDD
 
+import scala.collection.mutable
+
 case class DocWithVector[ID,T](id: ID, doc: T, vector: Vector)
 
 case class Corpus[ID,T](data: RDD[DocWithVector[ID,T]],
@@ -17,6 +19,22 @@ case class Corpus[ID,T](data: RDD[DocWithVector[ID,T]],
     kmeansModel.map(_.predict(vector))
   }
 
+  def topTerms(clusterId: Int, num: Int): List[(String, Double)] = {
+    val cmp = (p: (String, Double)) => -math.abs(p._2)
+    implicit val ord = Ordering.by(cmp)
+    val termWeights = new mutable.PriorityQueue[(String, Double)]()
+    kmeansModel.foreach(_.clusterCenters(clusterId).foreachActive { case (idx, wt) =>
+      if (termWeights.size < num) {
+        val w = (reverseDict(idx), wt)
+        termWeights += w
+      } else if (math.abs(wt) > math.abs(termWeights.head._2)) {
+        termWeights.dequeue()
+        val w = (reverseDict(idx), wt)
+        termWeights += w
+      }
+    })
+    termWeights.toList
+  }
 
 }
 
