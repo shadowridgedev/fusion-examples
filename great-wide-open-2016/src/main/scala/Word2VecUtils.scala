@@ -1,4 +1,3 @@
-import org.apache.spark.mllib.clustering._
 import org.apache.spark.mllib.feature.Word2VecModel
 import org.apache.spark.mllib.feature.Word2Vec
 import org.apache.spark.mllib.linalg.{Vectors, Vector}
@@ -45,7 +44,10 @@ object Word2VecUtils {
     new Word2Vec().fit(corpus)
   }
 
-}
+  def trainCorpus(corpus: Corpus[String, String],
+                  tokenizer: (String => List[String]) = (s: String) => s.toLowerCase.split("\\s+").toList) = {
+    val w2vModel = Word2VecUtils.train(corpus.data.map(dv => tokenizer(dv.doc)))
+    corpus.copy(word2VecModel = Some(w2vModel))
+  }
 
-object ClusterUtils {
 }
