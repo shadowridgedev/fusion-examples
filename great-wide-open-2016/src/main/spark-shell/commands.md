@@ -36,7 +36,7 @@ http://spark.apache.org/docs/latest/api/scala/index.html#org.apache.spark.ml.fea
 1. val tokenBody = body.map(b => b.toLowerCase().split(" ").toList)  // build the model
 1. val w2vModel = Word2VecUtils.train(tokenBody)
 1. import Word2VecUtils._
-1. w2vModel.safelyFindSynonyms("lucene", 5)
+1. w2vModel.safelyFindSynonyms("storm", 5)
 
 
 k-Means
@@ -47,4 +47,6 @@ http://spark.apache.org/docs/latest/api/scala/index.html#org.apache.spark.mllib.
 1. import BasicSolr._
 1. val idBody = tweets.selectIdAndText("id", "tweet_t") // get id, text tuples
 1. val corpus = KMeansUtils.generateClusters(idBody, 5, 5)  // do the clustering
-1.    
+1. corpus.kmeansModel.get.clusterCenters  // access to the cluster centroids, a tuple of vectors
+1. corpus.kmeansModel.get.clusterCenters(1).size
+1. corpus.topTerms(0, 10)
