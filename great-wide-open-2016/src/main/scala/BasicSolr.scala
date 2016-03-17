@@ -6,7 +6,6 @@ object BasicSolr extends Serializable{
 
   def langCardinality(sqlContext: SQLContext): DataFrame = {
     val tweets: DataFrame = loadTweets(sqlContext)
-    println(tweets.collect())
     tweets.cache()
     tweets.registerTempTable("tweets")
     tweets.groupBy("lang_s").count().show(50)

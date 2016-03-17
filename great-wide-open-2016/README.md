@@ -12,7 +12,7 @@ Requirements if using Fusion
 
 You will need:
 
-1. Fusion 2.2.0: http://lucidworks.com/fusion/download/ 
+1. Fusion 2.3.0: http://lucidworks.com/fusion/download/  (this isn't released yet, stay tuned!) 
 
 
 Requirements if using Solr and Spark
@@ -26,7 +26,7 @@ Requirements if using Solr and Spark
 Getting Started
 ==============
 
-1. Start Fusion: $FUSION_HOME/bin/fusion start
+1. Start Fusion: $FUSION_HOME/bin/fusion start or follow the directions on the spark-solr README
 1. Load the postman/datascience_webinar.json.postman_collection file into Postman
 1. Setup your Postman environment with the following values
    1. host: The name/IP where you are running Fusion

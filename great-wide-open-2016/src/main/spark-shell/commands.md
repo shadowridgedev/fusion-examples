@@ -13,6 +13,7 @@ A few basic commands to try out from the spark-shell:
 1. tweets.printSchema()
 1. tweets.show(10)
 1. tweets.select("id", "author").show(10)
+1. BasicSolr.langCardinality(sqlContext)
 
 
 
