@@ -1,5 +1,7 @@
 All working examples from Grant Ingersoll's Data Engineering with Solr and Spark talk.
 
+Slides are available at: http://www.slideshare.net/lucidworks/data-engineering-with-solr-and-spark.
+
 Requirements
 ==============
 
