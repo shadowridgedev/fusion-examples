@@ -2,7 +2,7 @@
 
 # Fusion server/auth
 PROTOCOL="http"
-SERVER="localhost:8784"
+SERVER="localhost:8764"
 echo -n "Fusion username: "
 read -e USERNAME
 echo -n "Fusion password: "
