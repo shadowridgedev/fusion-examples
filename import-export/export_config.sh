@@ -83,21 +83,21 @@ main () {
       curl -k -su $USERNAME:$PASSWORD $PROTOCOL'://'$SERVER'/api/apollo/collections/'$COLLECTION > "$COLLECTION_DIR/$COLLECTION.json"
 
       logs=`curl -k -su $USERNAME:$PASSWORD "$PROTOCOL://$SERVER/api/apollo/collections/$COLLECTION/features/searchLogs" | grep enabled | awk '{print $3}'`
-      if [ $logs == "true" ] 
+      if [ "$logs" == "true" ] 
       then
         echo "$COLLECTION has searchLogs enabled"
         touch "$COLLECTION_DIR/$COLLECTION.searchLogs"
       fi
 
       signals=`curl -k -su $USERNAME:$PASSWORD "$PROTOCOL://$SERVER/api/apollo/collections/$COLLECTION/features/signals" | grep enabled | awk '{print $3}'`
-      if [ $signals == "true" ]
+      if [ "$signals" == "true" ]
       then
         echo "$COLLECTION has signals enabled"
         touch "$COLLECTION_DIR/$COLLECTION.signals"
       fi
 
       dynamic=`curl -k -su $USERNAME:$PASSWORD "$PROTOCOL://$SERVER/api/apollo/collections/$COLLECTION/features/dynamicSchema" | grep enabled | awk '{print $3}'`
-      if [ $dynamic == "true" ]
+      if [ "$dynamic" == "true" ]
       then
         echo "$COLLECTION has dynamicSchema enabled"
         touch "$COLLECTION_DIR/$COLLECTION.dynamicSchema"
