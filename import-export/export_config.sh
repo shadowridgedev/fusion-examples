@@ -15,8 +15,8 @@ if [ "$colresp" = "{\"code\":\"unauthorized\"}" ]; then
   exit 1;
 fi;
 
-IFS=$'\r\n' GLOBIGNORE='*' :; ids=($(curl -k -su $USERNAME:$PASSWORD "$PROTOCOL://$SERVER/api/apollo/collections/" | grep \"id\" | sed -e 's/^.*:.*"\(.*\)",/\1/g' | egrep -v '_signals$|_signals_aggr$|^system_|_logs$|^logs$'))
-IFS=$'\n' sorted=($(sort <<<"${ids[*]}"))
+IFS=$'\r\n' GLOBIGNORE='*' :; ids=($(curl -k -su $USERNAME:$PASSWORD "$PROTOCOL://$SERVER/api/apollo/collections/" | grep \"id\" | sed -e 's/^.*:.*"\(.*\)",/\1/g' | egrep -v '_signals[[:cntrl:]]*$|_signals_aggr[[:cntrl:]]*$|^system_|_logs[[:cntrl:]]*$|^logs[[:cntrl:]]*$'))
+IFS=$'\r\n' sorted=($(sort <<<"${ids[*]}"))
 
 echo "The following collections exist in fusion: ${sorted[@]}"
 
@@ -32,7 +32,7 @@ echo
 # Solr config-files
 SOLR_FILES="schema.xml solrconfig.xml stopwords.txt synonyms.txt"
 IFS=$'\r\n' GLOBIGNORE='*' :; ids=($(curl -k -su $USERNAME:$PASSWORD "$PROTOCOL://$SERVER/api/apollo/connectors/datasources/" | grep "^  \"id\"" | sed -e 's/^.*:.*"\(.*\)",/\1/g'))
-IFS=$'\n' sorted=($(sort <<<"${ids[*]}"))
+IFS=$'\r\n' sorted=($(sort <<<"${ids[*]}"))
 echo "The following datasources exist in fusion: ${sorted[@]}"
 
 echo -n "Datasources to export (comma separated, blank for none, * for all): "
@@ -45,8 +45,8 @@ fi;
 
 echo
 
-IFS=$'\r\n' GLOBIGNORE='*' :; ids=($(curl -k -su $USERNAME:$PASSWORD "$PROTOCOL://$SERVER/api/apollo/index-pipelines/" | grep "^  \"id\"" | sed -e 's/^.*:.*"\(.*\)",/\1/g' | egrep -v '^aggr_|^signals_ingest$|^system_'))
-IFS=$'\n' sorted=($(sort <<<"${ids[*]}"))
+IFS=$'\r\n' GLOBIGNORE='*' :; ids=($(curl -k -su $USERNAME:$PASSWORD "$PROTOCOL://$SERVER/api/apollo/index-pipelines/" | grep "^  \"id\"" | sed -e 's/^.*:.*"\(.*\)",/\1/g' | egrep -v '^aggr_|^signals_ingest[[:cntrl:]]*$|^system_'))
+IFS=$'\r\n' sorted=($(sort <<<"${ids[*]}"))
 echo "The following INDEX PIPELINES exist in fusion: ${sorted[@]}"
 
 echo -n "Index pipelines to export (comma separated, blank for none, * for all): "
@@ -59,7 +59,7 @@ fi;
 echo
 
 IFS=$'\r\n' GLOBIGNORE='*' :; ids=($(curl -k -su $USERNAME:$PASSWORD "$PROTOCOL://$SERVER/api/apollo/query-pipelines/" | grep "^  \"id\"" | sed -e 's/^.*:.*"\(.*\)",/\1/g' | egrep -v '^system_'))
-IFS=$'\n' sorted=($(sort <<<"${ids[*]}"))
+IFS=$'\r\n' sorted=($(sort <<<"${ids[*]}"))
 echo "The following QUERY PIPELINES exist in fusion: ${sorted[@]}"
 
 echo -n "Query pipelines to export (comma separated, blank for none, * for all): "
