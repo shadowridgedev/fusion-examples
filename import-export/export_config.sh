@@ -2,7 +2,7 @@
 
 # Fusion server/auth
 PROTOCOL="http"
-SERVER="localhost:8784"
+SERVER="localhost:8764"
 echo -n "Fusion username: "
 read -e USERNAME
 echo -n "Fusion password: "
@@ -15,8 +15,8 @@ if [ "$colresp" = "{\"code\":\"unauthorized\"}" ]; then
   exit 1;
 fi;
 
-IFS=$'\r\n' GLOBIGNORE='*' :; ids=($(curl -k -su $USERNAME:$PASSWORD "$PROTOCOL://$SERVER/api/apollo/collections/" | grep \"id\" | sed -e 's/^.*:.*"\(.*\)",/\1/g' | egrep -v '_signals$|_signals_aggr$|^system_|_logs$|^logs$'))
-IFS=$'\n' sorted=($(sort <<<"${ids[*]}"))
+IFS=$'\r\n' GLOBIGNORE='*' :; ids=($(curl -k -su $USERNAME:$PASSWORD "$PROTOCOL://$SERVER/api/apollo/collections/" | grep \"id\" | sed -e 's/^.*:.*"\(.*\)",/\1/g' | egrep -v '_signals[[:cntrl:]]*$|_signals_aggr[[:cntrl:]]*$|^system_|_logs[[:cntrl:]]*$|^logs[[:cntrl:]]*$'))
+IFS=$'\r\n' sorted=($(sort <<<"${ids[*]}"))
 
 echo "The following collections exist in fusion: ${sorted[@]}"
 
@@ -32,7 +32,7 @@ echo
 # Solr config-files
 SOLR_FILES="schema.xml solrconfig.xml stopwords.txt synonyms.txt"
 IFS=$'\r\n' GLOBIGNORE='*' :; ids=($(curl -k -su $USERNAME:$PASSWORD "$PROTOCOL://$SERVER/api/apollo/connectors/datasources/" | grep "^  \"id\"" | sed -e 's/^.*:.*"\(.*\)",/\1/g'))
-IFS=$'\n' sorted=($(sort <<<"${ids[*]}"))
+IFS=$'\r\n' sorted=($(sort <<<"${ids[*]}"))
 echo "The following datasources exist in fusion: ${sorted[@]}"
 
 echo -n "Datasources to export (comma separated, blank for none, * for all): "
@@ -45,8 +45,8 @@ fi;
 
 echo
 
-IFS=$'\r\n' GLOBIGNORE='*' :; ids=($(curl -k -su $USERNAME:$PASSWORD "$PROTOCOL://$SERVER/api/apollo/index-pipelines/" | grep "^  \"id\"" | sed -e 's/^.*:.*"\(.*\)",/\1/g' | egrep -v '^aggr_|^signals_ingest$|^system_'))
-IFS=$'\n' sorted=($(sort <<<"${ids[*]}"))
+IFS=$'\r\n' GLOBIGNORE='*' :; ids=($(curl -k -su $USERNAME:$PASSWORD "$PROTOCOL://$SERVER/api/apollo/index-pipelines/" | grep "^  \"id\"" | sed -e 's/^.*:.*"\(.*\)",/\1/g' | egrep -v '^aggr_|^signals_ingest[[:cntrl:]]*$|^system_'))
+IFS=$'\r\n' sorted=($(sort <<<"${ids[*]}"))
 echo "The following INDEX PIPELINES exist in fusion: ${sorted[@]}"
 
 echo -n "Index pipelines to export (comma separated, blank for none, * for all): "
@@ -59,7 +59,7 @@ fi;
 echo
 
 IFS=$'\r\n' GLOBIGNORE='*' :; ids=($(curl -k -su $USERNAME:$PASSWORD "$PROTOCOL://$SERVER/api/apollo/query-pipelines/" | grep "^  \"id\"" | sed -e 's/^.*:.*"\(.*\)",/\1/g' | egrep -v '^system_'))
-IFS=$'\n' sorted=($(sort <<<"${ids[*]}"))
+IFS=$'\r\n' sorted=($(sort <<<"${ids[*]}"))
 echo "The following QUERY PIPELINES exist in fusion: ${sorted[@]}"
 
 echo -n "Query pipelines to export (comma separated, blank for none, * for all): "
@@ -83,21 +83,21 @@ main () {
       curl -k -su $USERNAME:$PASSWORD $PROTOCOL'://'$SERVER'/api/apollo/collections/'$COLLECTION > "$COLLECTION_DIR/$COLLECTION.json"
 
       logs=`curl -k -su $USERNAME:$PASSWORD "$PROTOCOL://$SERVER/api/apollo/collections/$COLLECTION/features/searchLogs" | grep enabled | awk '{print $3}'`
-      if [ $logs == "true" ] 
+      if [ "$logs" == "true" ] 
       then
         echo "$COLLECTION has searchLogs enabled"
         touch "$COLLECTION_DIR/$COLLECTION.searchLogs"
       fi
 
       signals=`curl -k -su $USERNAME:$PASSWORD "$PROTOCOL://$SERVER/api/apollo/collections/$COLLECTION/features/signals" | grep enabled | awk '{print $3}'`
-      if [ $signals == "true" ]
+      if [ "$signals" == "true" ]
       then
         echo "$COLLECTION has signals enabled"
         touch "$COLLECTION_DIR/$COLLECTION.signals"
       fi
 
       dynamic=`curl -k -su $USERNAME:$PASSWORD "$PROTOCOL://$SERVER/api/apollo/collections/$COLLECTION/features/dynamicSchema" | grep enabled | awk '{print $3}'`
-      if [ $dynamic == "true" ]
+      if [ "$dynamic" == "true" ]
       then
         echo "$COLLECTION has dynamicSchema enabled"
         touch "$COLLECTION_DIR/$COLLECTION.dynamicSchema"
