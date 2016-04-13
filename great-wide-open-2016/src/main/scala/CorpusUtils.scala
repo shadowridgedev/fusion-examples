@@ -1,9 +1,13 @@
+import org.apache.lucene.analysis.Analyzer
+import org.apache.lucene.analysis.standard.StandardAnalyzer
+import org.apache.lucene.analysis.tokenattributes.{CharTermAttributeImpl, CharTermAttribute}
 import org.apache.spark.mllib.clustering.KMeansModel
 import org.apache.spark.mllib.feature.Word2VecModel
 import org.apache.spark.mllib.linalg.{Vectors, Vector}
 import org.apache.spark.rdd.RDD
 
 import scala.collection.mutable
+import scala.collection.mutable.ListBuffer
 
 case class DocWithVector[ID,T](id: ID, doc: T, vector: Vector)
 
@@ -58,4 +62,21 @@ object CorpusUtils {
       Corpus(rawInput.map(x => DocWithVector(x._1, x._2, dictionaryVectorizer(x._2))), dictionary, dictionaryVectorizer)
     corpus
   }
+
+  val standardAnalyzer = new StandardAnalyzer()
+
+  def stringTokenizer(analyzer: Analyzer): (String) => List[String] = (text: String) => {
+    val stream = analyzer.tokenStream("", text)
+    stream.reset()
+    val termAttr = stream.getAttribute[CharTermAttribute](classOf[CharTermAttribute])
+    val result = new ListBuffer[String]()
+    while (stream.incrementToken()) {
+      result += termAttr.toString
+    }
+    stream.end()
+    stream.close()
+    result.toList
+  }
+
+  val tokenizeStandard = stringTokenizer(standardAnalyzer)
 }
