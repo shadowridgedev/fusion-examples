@@ -7,7 +7,7 @@ object BasicSolr extends Serializable {
     val tweets: DataFrame = loadTweets(sqlContext)
     tweets.cache()
     tweets.registerTempTable("tweets")
-    tweets.groupBy("lang_s").count().show(50)
+    tweets.groupBy("userLang").count().show(50)
     tweets
   }
 
