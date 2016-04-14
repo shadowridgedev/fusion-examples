@@ -34,17 +34,8 @@ import BasicSolr._
 // load them tweets!
 val tweets = loadTweets(sqlContext)
 
-// we really should have this work:
-
-  import com.lucidworks.spark.analysis.LuceneTextAnalyzer
-  val analyzer = new LuceneTextAnalyzer(analyzerSchema)
-  val analyzerFn = (s: String) => analyzer.analyze("ignored", s).toList
-
-// but sadly this seems to fail with:
-// java.io.NotSerializableException: com.lucidworks.spark.analysis.LuceneTextAnalyzer
-// so we're stuck with:
-
-val analyzerFn = (s: String) => s.toLowerCase().trim().split(" ").toList
+// create a serialization-safe wrapper around the Lucene analyzer
+val analyzerFn = new AnalyzerWrapper(analyzerSchema)
 
 // build a dictionary vectorizer with tf-idf weighting
 val vectorizer = buildVectorizer(tweets, analyzerFn)
