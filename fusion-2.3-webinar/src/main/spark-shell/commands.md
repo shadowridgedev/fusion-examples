@@ -1,53 +1,31 @@
-Basics
+Annotated Webinar Demo Script
 ======================
 
-Assuming you have some tweets in your twitter collection
+Assuming you have some tweets in your twitter collection, 
+you can do the following (do not paste in the comments marked by //):
 
-A few basic commands to try out from the spark-shell:
+//Check out this file for details on implementation
+:load /PATH_TO_CHECKOUT/fusion-examples/fusion-2.3-webinar/src/main/scala/BasicSolr2.scala
+import BasicSolr._
+//Load your data into Spark from Solr
+val tweets = loadTweets(sqlContext)
+//Cache the data in Spark so that we don't have to hit Solr again
+tweets.cache()
 
-
-1. :load /MY/PATH/fusion-examples/fusion-2.3-webinar/src/main/scala/BasicSolr.scala
-1. :load /MY/PATH/fusion-examples/fusion-2.3-webinar/src/main/scala/CorpusUtils.scala
-1. :load /MY/PATH/fusion-examples/fusion-2.3-webinar/src/main/scala/KMeansUtils.scala
-1. val tweets = BasicSolr.loadTweets(sqlContext)
-1. tweets.printSchema()
-1. tweets.show(10)
-1. tweets.select("id", "userScreenName").show(10)
-1. BasicSolr.langCardinality(sqlContext)
-
-
-
-
-
-Data Frames
-=====================
-
-http://spark.apache.org/docs/latest/api/scala/index.html#org.apache.spark.sql.DataFrame
-
-1.  tweets.filter(tweets("tagText").isNotNull).select("id", "tweet", "tagText").show(10) 
-
-
-
-Word 2 Vec
-======================
-
-http://spark.apache.org/docs/latest/api/scala/index.html#org.apache.spark.ml.feature.Word2Vec
-
-1. val body = tweets.flatMap(t => BasicSolr.first[String](t, "tweet"))  // lets get the tweets
-1. val tokenBody = body.map(b => b.toLowerCase().split(" ").toList)  // build the model
-1. val w2vModel = Word2VecUtils.train(tokenBody)
-1. import Word2VecUtils._
-1. w2vModel.safelyFindSynonyms("storm", 5)
-
-
-k-Means
-=======================
-
-http://spark.apache.org/docs/latest/api/scala/index.html#org.apache.spark.mllib.clustering.KMeans
-
-1. import BasicSolr._
-1. val idBody = tweets.selectIdAndText("id", "tweet") // get id, text tuples
-1. val corpus = KMeansUtils.generateClusters(idBody, 5, 5)  // do the clustering
-1. corpus.kmeansModel.get.clusterCenters  // access to the cluster centroids, a tuple of vectors
-1. corpus.kmeansModel.get.clusterCenters(1).size
-1. corpus.topTerms(0, 10)
+//Load up the new Lucene Analyzer stuff: See https://lucidworks.com/blog/2016/04/13/spark-solr-lucenetextanalyzer/
+import com.lucidworks.spark.analysis.LuceneTextAnalyzer
+val analyzer = new LuceneTextAnalyzer(analyzerSchema)
+val analyzerFn = (s: String) => s.toLowerCase().trim().split(" ").toList
+// Create vectors out of the Tweets so that we can do k-means
+val vectorizer = buildVectorizer(tweets, analyzerFn)
+val tweetsWithVectors = vectorize(tweets, vectorizer)
+tweetsWithVectors.select("id", "tweet_vect").show()
+//Create a KMeans model with K = 10
+val kmm = buildKmeansModel(tweetsWithVectors, k = 10, maxIter = 20)
+// Get an RDD of the Tweets with the centroids on the tweet
+val tweetsWithCentroids = kmm.transform(tweetsWithVectors)
+// See, it worked!
+tweetsWithCentroids.groupBy("kmeans_cluster_i").count().show()
+//Save to Solr
+tweetsWithCentroids.write.format("solr").options(Map("zkhost" -> "localhost:9983", "collection" -> "twitter", "batchSize" -> "1000")).mode(org.apache.spark.sql.SaveMode.Overwrite).save
+//DON'T FORGET TO COMMIT!!!!!!!!!!!!!!!!!!!
