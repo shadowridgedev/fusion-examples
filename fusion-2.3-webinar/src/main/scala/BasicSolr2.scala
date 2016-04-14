@@ -4,13 +4,20 @@ import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{DataFrame, SQLContext}
 import org.apache.spark.mllib.linalg.{Vector => SparkVector, Vectors}
 
+import com.lucidworks.spark.analysis.LuceneTextAnalyzer
 
 
-case class TfIdfVectorizer(tokenzier: String => List[String],
+class AnalyzerWrapper(schema: String) extends (String => List[String]) with Serializable {
+  @transient lazy val analyzer = new LuceneTextAnalyzer(schema)
+
+  override def apply(s: String) = analyzer.analyze("ignored", s).toList
+}
+
+case class TfIdfVectorizer(tokenizer: String => List[String],
                            dictionary: Map[String, Int],
                            idfs: Map[String, Double]) extends (String => SparkVector) {
   override def apply(s: String): SparkVector = {
-    val tokenTfs = tokenzier(s).groupBy(identity).mapValues(_.size).toList
+    val tokenTfs = tokenizer(s).groupBy(identity).mapValues(_.size).toList
     val tfIdfMap = tokenTfs.flatMap { case (token, tf) =>
       dictionary.get(token).map(idx => (idx, tf * idfs.getOrElse(token, 1.0))) }
     Vectors.sparse(dictionary.size, tfIdfMap)
@@ -31,7 +38,7 @@ val tweets = loadTweets(sqlContext)
 
   import com.lucidworks.spark.analysis.LuceneTextAnalyzer
   val analyzer = new LuceneTextAnalyzer(analyzerSchema)
-  val analyzerFn = (s: String) = analyzer.analyze("ignored", s).toList
+  val analyzerFn = (s: String) => analyzer.analyze("ignored", s).toList
 
 // but sadly this seems to fail with:
 // java.io.NotSerializableException: com.lucidworks.spark.analysis.LuceneTextAnalyzer
