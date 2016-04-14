@@ -5,6 +5,7 @@ import org.apache.spark.sql.{DataFrame, SQLContext}
 import org.apache.spark.mllib.linalg.{Vector => SparkVector, Vectors}
 
 
+
 case class TfIdfVectorizer(tokenzier: String => List[String],
                            dictionary: Map[String, Int],
                            idfs: Map[String, Double]) extends (String => SparkVector) {
@@ -16,6 +17,66 @@ case class TfIdfVectorizer(tokenzier: String => List[String],
   }
 }
 
+/**
+  * Usage:
+
+:load $FUSION_EXAMPLES_CHECKOUT/fusion-2.3-webinar/src/main/scala/BasicSolr2.scala
+
+import BasicSolr._
+
+// load them tweets!
+val tweets = loadTweets(sqlContext)
+
+// we really should have this work:
+
+  import com.lucidworks.spark.analysis.LuceneTextAnalyzer
+  val analyzer = new LuceneTextAnalyzer(analyzerSchema)
+  val analyzerFn = (s: String) = analyzer.analyze("ignored", s).toList
+
+// but sadly this seems to fail with:
+// java.io.NotSerializableException: com.lucidworks.spark.analysis.LuceneTextAnalyzer
+// so we're stuck with:
+
+val analyzerFn = (s: String) => s.toLowerCase().trim().split(" ").toList
+
+// build a dictionary vectorizer with tf-idf weighting
+val vectorizer = buildVectorizer(tweets, analyzerFn)
+
+// append a "tweet_vect" field with the vectors from the "tweet" field
+val tweetsWithVectors = vectorize(tweets, vectorizer)
+
+tweetsWithVectors.select("id", "tweet_vect").show()
+
+// build a kmeans model:
+val kmm = buildKmeansModel(tweetsWithVectors, k = 10, maxIter = 20)
+
+// append the cluster ids to the tweets:
+val tweetsWithCentroids = kmm.transform(tweetsWithVectors)
+
+tweetsWithCentroids.groupBy("kmeans_cluster_i").count().show()
+
+// build an LDA model:
+
+val lda = buildLDAModel(tweetsWithVectors, k = 20)
+
+// get human-understandable topics from the model:
+
+val termTopicDistributions = tokensForTopics(lda, vectorizer)
+val topTerms = termTopicDistributions.mapValues(_.take(10))
+topTerms.foreach { case (topicId, tokens) => println(s"topic_$topicId: ${tokens.map(_._1).mkString(", ")}") }
+
+// infer topic distributions on the tweets, and append these distributions back onto them in a new field:
+
+val tweetsWithTopicIds = lda.transform(tweetsWithCentroids)
+
+tweetsWithCentroids.select("id","tweet_vect","kmeans_cluster_i","topicDistribution").show()
+
+// word2vec!
+
+val w2vModel = buildWord2VecModel(tweets, analyzerFn)
+w2vModel.findSynonyms("solr", 5)
+
+  */
 object BasicSolr extends Serializable {
 
   def langCardinality(sqlContext: SQLContext): DataFrame = {
@@ -37,6 +98,13 @@ object BasicSolr extends Serializable {
     sqlContext.read.format("solr").options(opts).load
   }
 
+  val analyzerSchema = """{ "analyzers": [
+                 |                { "name": "StdTokLowerStop",
+                 |                  "tokenizer": { "type": "standard" },
+                 |                  "filters": [{ "type": "lowercase" },
+                 |                              { "type": "stop" }] }],
+                 |        "fields": [{ "regex": ".+", "analyzer": "StdTokLowerStop" } ]}
+               """.stripMargin
 
   def buildVectorizer(df: DataFrame,
                       tokenizer: String => List[String],
