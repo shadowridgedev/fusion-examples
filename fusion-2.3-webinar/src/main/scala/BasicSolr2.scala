@@ -7,12 +7,6 @@ import org.apache.spark.mllib.linalg.{Vector => SparkVector, Vectors}
 import com.lucidworks.spark.analysis.LuceneTextAnalyzer
 
 
-class AnalyzerWrapper(schema: String) extends (String => List[String]) with Serializable {
-  @transient lazy val analyzer = new LuceneTextAnalyzer(schema)
-
-  override def apply(s: String) = analyzer.analyze("ignored", s).toList
-}
-
 case class TfIdfVectorizer(tokenizer: String => List[String],
                            dictionary: Map[String, Int],
                            idfs: Map[String, Double]) extends (String => SparkVector) {
@@ -35,7 +29,8 @@ import BasicSolr._
 val tweets = loadTweets(sqlContext)
 
 // create a serialization-safe wrapper around the Lucene analyzer
-val analyzerFn = new AnalyzerWrapper(analyzerSchema)
+val analyzer = new LuceneTextAnalyzer(analyzerSchema)
+val analyzerFn = (s: String) => analyzer.analyze("ignored", s).toList
 
 // build a dictionary vectorizer with tf-idf weighting
 val vectorizer = buildVectorizer(tweets, analyzerFn)
