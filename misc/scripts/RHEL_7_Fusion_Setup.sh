@@ -12,6 +12,10 @@ sudo yum -y install vim
 #
 filename=jdk-8u65-linux-x64.rpm
 wget --no-cookies --no-check-certificate --header "Cookie: gpw_e24=http%3A%2F%2Fwww.oracle.com%2F; oraclelicense=accept-securebackup-cookie" "http://download.oracle.com/otn-pub/java/jdk/8u65-b17/jdk-8u65-linux-x64.rpm"
+if [ ! -s $filename ]; then
+  echo "Could not download java, you may need to setup http_proxy and https_proxy environment variables."
+  exit -1
+fi
 
 # Java install method via RPM looks easiest...
 sudo rpm -Uvh $filename
