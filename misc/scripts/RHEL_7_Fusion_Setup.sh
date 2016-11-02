@@ -40,5 +40,9 @@ sudo su lucidworks -c "mkdir -p ~/.ssh/"
 sudo su lucidworks -c "chmod 600 ~/.ssh/authorized_keys "
 
 #
+# TODO: Add ulimit stuff
+#
+
+#
 # TODO: Add download and setup of Fusion bits
 #
