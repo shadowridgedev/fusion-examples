@@ -1,6 +1,10 @@
 #!/bin/bash
 
 #
+# Create a fresh RHEL image in AWS, with EBS-backed storage for Fusion. Then run this script which requires sudo privileges.
+#
+
+#
 # Update local RHEL image
 #
 sudo yum -y update
@@ -16,8 +20,6 @@ if [ ! -s $filename ]; then
   echo "Could not download java, you may need to setup http_proxy and https_proxy environment variables."
   exit -1
 fi
-
-# Java install method via RPM looks easiest...
 sudo rpm -Uvh $filename
 sudo alternatives --install /usr/bin/java java /usr/java/latest/bin/java 2
 
@@ -56,6 +58,11 @@ lsblk
 # for now, hard code the device name
 device=/dev/xvdb
 sudo file -s $device
+
+# if the partition is already formatted, just quit
+sudo file -s $device | grep -l ": data"
+test $? -gt 0 && exit
+
 mnt=/opt/lucidworks
 sudo mkdir $mnt
 sudo mkfs -t ext4 $device && sudo mount $device $mnt 
