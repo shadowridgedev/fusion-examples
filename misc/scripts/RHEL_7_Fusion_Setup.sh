@@ -61,14 +61,16 @@ sudo file -s $device
 
 # if the partition is already formatted, just quit
 sudo file -s $device | grep -l ": data"
-test $? -gt 0 && exit
+test $? -gt 0 && echo "Device is already formatted! Exiting." && exit
 
 mnt=/opt/lucidworks
 sudo mkdir $mnt
 sudo mkfs -t ext4 $device && sudo mount $device $mnt 
 sudo chown -R lucidworks:lucidworks $mnt
 
+#TODO: make changes permanent in fstab
+
 #
-# TODO: Add download and setup of Fusion bits
+# TODO: Setup of Fusion bits
 #
 sudo -u lucidworks wget -q https://download.lucidworks.com/fusion-2.4.3.tar.gz -O $mnt/fusion-2.4.3.tar.gz
