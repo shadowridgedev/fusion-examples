@@ -13,6 +13,7 @@ sudo yum -y install vim
 
 #
 # Install Java 8
+# Use the RPM method....
 #
 filename=jdk-8u112-linux-x64.rpm
 wget --no-cookies --no-check-certificate --header "Cookie: gpw_e24=http%3A%2F%2Fwww.oracle.com%2F; oraclelicense=accept-securebackup-cookie" "http://download.oracle.com/otn-pub/java/jdk/8u112-b15/$filename"
@@ -51,6 +52,7 @@ sudo bash -c 'echo "lucidworks           hard    nofile          63536" >>/etc/s
 sudo bash -c 'echo "lucidworks           soft    nproc          16384" >>/etc/security/limits.conf'
 sudo bash -c 'echo "lucidworks           hard    nproc          16384" >>/etc/security/limits.conf'
 
+# Optionally .... Use separate storage volumes, format & mount...
 #
 # Setup EBS volume
 #
@@ -71,6 +73,7 @@ sudo chown -R lucidworks:lucidworks $mnt
 #TODO: make changes permanent in fstab
 
 #
-# TODO: Setup of Fusion bits
+# TODO: Stage and/or Setup of Fusion bits
 #
-sudo -u lucidworks wget -q https://download.lucidworks.com/fusion-2.4.3.tar.gz -O $mnt/fusion-2.4.3.tar.gz
+filename=fusion-3.0.0.tar.gz
+sudo -u lucidworks wget -q https://download.lucidworks.com/$filename -O $mnt/$filename
