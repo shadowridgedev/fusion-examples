@@ -76,6 +76,9 @@ sudo chown -R lucidworks:lucidworks $mnt
 
 #TODO: make changes permanent in fstab
 
+
+#
+# LUCIDWORKS INTERNAL ONLY.,.... do not share below w/ prospects/customers. THanks.
 #
 # TODO: Stage and/or Setup of Fusion bits
 #
