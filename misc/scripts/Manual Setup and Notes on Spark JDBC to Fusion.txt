@@ -1,0 +1,80 @@
+Links:
+https://gist.github.com/kiranchitturi/0be62fc13e4ec7f9ae5def53180ed181
+
+
+
+
+AMIs:
+
+JDBC1, JDBC2, JDBC3, 	
+( datqabase snapshot ) taxi-data-derek-final-snapshot
+
+jot down data for each VM ( #, ssh command, internal IP)
+
+1
+ssh -i "Derek-SPARK-JDBC1.pem" ubuntu@ec2-54-236-23-137.compute-1.amazonaws.com
+10.41.1.80
+
+2
+ssh -i "Derek-SPARK-JDBC1.pem" ubuntu@ec2-52-73-9-172.compute-1.amazonaws.com
+10.41.1.105
+
+3
+ssh -i "Derek-SPARK-JDBC1.pem" ubuntu@ec2-52-201-27-198.compute-1.amazonaws.com
+10.41.1.226
+
+
+Edit your configs ! 
+
+conf/config.sh ( w/ internal Ips of JDBC1,JDBC2,JDBC3 )
+
+FUSION_ZK=10.41.1.80:9983,10.41.1.105:9983,10.41.1.226:9983
+FUSION_SOLR_ZK=10.41.1.80:9983,10.41.1.105:9983,10.41.1.226:9983
+
+conf/zookeeper/zoo.cfg ( look for IPs )
+
+server.1=10.41.1.80:2888:3888
+server.2=10.41.1.105:2888:3888
+server.3=10.41.1.226:2888:3888
+
+Zookeeper Cache ? ??
+
+
+
+Start order and Box #:
+
+ZK  1,2,3
+Solr1
+API 1,2,3
+Connectors 1
+Fusion 1
+Spark Master 1
+Spark worker 1,2,3
+
+./spark-shell start box 1
+./bin/spark-shell -m 28g -c 4 -t 12
+
+
+paste this script into spark-shell ( don't forget to change last line to your internal IPs !!!  and double check the RDS url )
+
+
+// get the max ID from the db to use for partitioning
+val getMaxId = sqlContext.jdbc("jdbc:postgresql://taxi-data-derek.cikmdrscwqru.us-east-1.rds.amazonaws.com:5432/nyc-taxi-data?user=taxidatalogin&password=SecretPassword!", "(select max(id) as maxId from trips) tmp")
+
+// note: lower & upper bounds are not filters
+val dbOpts = Map(
+"url" -> "jdbc:postgresql://taxi-data-derek.cikmdrscwqru.us-east-1.rds.amazonaws.com:5432/nyc-taxi-data?user=taxidatalogin&password=7mP91OO4Y*7LDi",
+"dbtable" -> "trips",
+"partitionColumn" -> "id",
+"numPartitions" -> "200",
+"lowerBound" -> "0",
+"upperBound" -> getMaxId.select("maxId").collect()(0)(0).toString,
+"fetchSize" -> "5000"
+)
+
+var jdbcDF = sqlContext.read.format("jdbc").options(dbOpts).load
+jdbcDF.write.format("lucidworks.fusion.index").options(Map("zkhost" -> "10.41.1.80:9983,10.41.1.105:9983,10.41.1.226:9983", 
+, "collection" -> "nyc-taxi")).save
+
+
+
