@@ -15,8 +15,7 @@
     "csvParsing" : true,
     "skip" : false,
     "label" : "tika-parser",
-    "type" : "tika-parser",
-    "sourceField" : "_raw_content_",
+
     "sourceField" : "_raw_content_"
   }, {
     "type" : "field-mapping",
@@ -246,7 +245,7 @@
     } ],
     "skip" : false,
     "label" : "field-mapping",
-    "type" : "field-mapping"
+
   }, {
     "type" : "javascript-index",
     "id" : "7mji3sor",
