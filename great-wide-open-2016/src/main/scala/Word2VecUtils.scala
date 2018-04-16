@@ -1,6 +1,6 @@
 import org.apache.spark.mllib.feature.Word2VecModel
 import org.apache.spark.mllib.feature.Word2Vec
-import org.apache.spark.mllib.linalg.{Vectors, Vector}
+import org.apache.spark.mllib.linalg.{ Vectors, Vector }
 import org.apache.spark.rdd.RDD
 
 object Word2VecUtils {
@@ -14,15 +14,15 @@ object Word2VecUtils {
   }
 
   /**
-    * usage: pass in a tokenized document, and the number of words you want,
-    * and get back a weighted vector of "synonyms" of this document.
-    * @param model trained via something like the following:
-    *              val w2v = org.apache.spark.mllib.feature.Word2Vec()
-    *              val tokenizedCorpus: RDD[ List[String] ]  = ...
-    *              val model = w2v.fit(tokenizedCorpus)
-    *              import Word2VecUtils._
-    *              model.findDocSynonyms("the quick brown fox".split(" "), 2).foreach(println)
-    */
+   * usage: pass in a tokenized document, and the number of words you want,
+   * and get back a weighted vector of "synonyms" of this document.
+   * @param model trained via something like the following:
+   *              val w2v = org.apache.spark.mllib.feature.Word2Vec()
+   *              val tokenizedCorpus: RDD[ List[String] ]  = ...
+   *              val model = w2v.fit(tokenizedCorpus)
+   *              import Word2VecUtils._
+   *              model.findDocSynonyms("the quick brown fox".split(" "), 2).foreach(println)
+   */
   implicit class Word2VecExtensions(model: Word2VecModel) {
     private val vocab = model.getVectors.keySet
 
@@ -44,8 +44,9 @@ object Word2VecUtils {
     new Word2Vec().fit(corpus)
   }
 
-  def trainCorpus(corpus: Corpus[String, String],
-                  tokenizer: (String => List[String]) = (s: String) => s.toLowerCase.split("\\s+").toList) = {
+  def trainCorpus(
+    corpus: Corpus[String, String],
+    tokenizer: (String => List[String]) = (s: String) => s.toLowerCase.split("\\s+").toList) = {
     val w2vModel = Word2VecUtils.train(corpus.data.map(dv => tokenizer(dv.doc)))
     corpus.copy(word2VecModel = Some(w2vModel))
   }

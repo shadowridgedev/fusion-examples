@@ -1,17 +1,18 @@
 import org.apache.spark.mllib.clustering.KMeansModel
 import org.apache.spark.mllib.feature.Word2VecModel
-import org.apache.spark.mllib.linalg.{Vectors, Vector}
+import org.apache.spark.mllib.linalg.{ Vectors, Vector }
 import org.apache.spark.rdd.RDD
 
 import scala.collection.mutable
 
-case class DocWithVector[ID,T](id: ID, doc: T, vector: Vector)
+case class DocWithVector[ID, T](id: ID, doc: T, vector: Vector)
 
-case class Corpus[ID,T](data: RDD[DocWithVector[ID,T]],
-                        dict: Map[String, Int],
-                        tokenizer: T => Vector,
-                        kmeansModel: Option[KMeansModel] = None,
-                        word2VecModel: Option[Word2VecModel] = None) {
+case class Corpus[ID, T](
+  data: RDD[DocWithVector[ID, T]],
+  dict: Map[String, Int],
+  tokenizer: T => Vector,
+  kmeansModel: Option[KMeansModel] = None,
+  word2VecModel: Option[Word2VecModel] = None) {
   val reverseDict: Array[String] = dict.toList.sortBy(_._2).map(_._1).toArray
 
   def findNearestCluster(doc: T): Option[Int] = {
@@ -23,15 +24,16 @@ case class Corpus[ID,T](data: RDD[DocWithVector[ID,T]],
     val cmp = (p: (String, Double)) => -math.abs(p._2)
     implicit val ord = Ordering.by(cmp)
     val termWeights = new mutable.PriorityQueue[(String, Double)]()
-    kmeansModel.foreach(_.clusterCenters(clusterId).foreachActive { case (idx, wt) =>
-      if (termWeights.size < num) {
-        val w = (reverseDict(idx), wt)
-        termWeights += w
-      } else if (math.abs(wt) > math.abs(termWeights.head._2)) {
-        termWeights.dequeue()
-        val w = (reverseDict(idx), wt)
-        termWeights += w
-      }
+    kmeansModel.foreach(_.clusterCenters(clusterId).foreachActive {
+      case (idx, wt) =>
+        if (termWeights.size < num) {
+          val w = (reverseDict(idx), wt)
+          termWeights += w
+        } else if (math.abs(wt) > math.abs(termWeights.head._2)) {
+          termWeights.dequeue()
+          val w = (reverseDict(idx), wt)
+          termWeights += w
+        }
     })
     termWeights.toList
   }
@@ -39,8 +41,9 @@ case class Corpus[ID,T](data: RDD[DocWithVector[ID,T]],
 }
 
 object CorpusUtils {
-  def vectorize[ID,T](rawInput: RDD[(ID,T)],
-                      tokenize: (T => Iterable[String])): Corpus[ID,T] = {
+  def vectorize[ID, T](
+    rawInput: RDD[(ID, T)],
+    tokenize: (T => Iterable[String])): Corpus[ID, T] = {
     val tokenized = rawInput.map(t => (t._1, tokenize(t._2)))
     // count number of unique documents containing each token
     val tokenCounts = tokenized.flatMap(_._2.toSet.map((tok: String) => (tok, 1))).reduceByKey(_ + _)
@@ -54,7 +57,7 @@ object CorpusUtils {
       val tokenIndexCounts = tokens.flatMap(dictionary.get).groupBy(identity).mapValues(_.sum.toDouble).toList
       Vectors.sparse(dictionary.size, tokenIndexCounts)
     }
-    val corpus: Corpus[ID,T] =
+    val corpus: Corpus[ID, T] =
       Corpus(rawInput.map(x => DocWithVector(x._1, x._2, dictionaryVectorizer(x._2))), dictionary, dictionaryVectorizer)
     corpus
   }
